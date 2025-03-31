@@ -1,0 +1,4 @@
+# Ignore temporary files and directories
+.env           # Environment variables
+cookies.txt    # Authentication cookies
+.cache         # Cache files
