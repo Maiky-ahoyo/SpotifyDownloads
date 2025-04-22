@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuración mejorada de metadatos
 DEFAULT_METADATA = {
     'title': 'Unknown Title',
     'artists': 'Unknown Artist',
@@ -46,7 +45,7 @@ def get_playlist_songs(sp, playlist_id):
                 except Exception as e:
                     print(f"Error processing track: {str(e)}")
         results = sp.next(results) if results.get('next') else None
-        time.sleep(0.7)  # Mejor manejo de rate limits
+        time.sleep(0.7)
     return songs
 
 def process_song(sp, track):
@@ -77,18 +76,15 @@ def extract_metadata(track):
 
 def extract_genre(sp, track):
     try:
-        # Primero intentar con el artista principal
         main_artist_id = track['artists'][0]['id']
         artist = sp.artist(main_artist_id)
         if artist.get('genres'):
             return artist['genres'][0].capitalize()
 
-        # Intentar con el álbum
         album = sp.album(track['album']['id'])
         if album.get('genres'):
             return album['genres'][0].capitalize()
 
-        # Último recurso: género por defecto
         return 'Unknown Genre'
     except Exception as e:
         print(f"Genre extraction error: {str(e)}")
@@ -101,7 +97,6 @@ def song_exists(directory, song):
     expected_name = f"{sanitize_filename(song['artists'])} - {sanitize_filename(song['title'])}.mp3"
     target_path = os.path.join(directory, expected_name)
 
-    # Verificar tanto por nombre como por metadatos
     if os.path.exists(target_path):
         try:
             audio = ID3(target_path)
@@ -156,7 +151,7 @@ def download_song(directory, song):
 
     try:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch:{song['artists']} {song['title']}", download=True)
+            info = ydl.extract_info(f"ytsearch:{song['title']} lyrics explicit {song['artists']} ", download=True)
 
             if info and 'entries' in info and info['entries']:
                 temp_file = ydl.prepare_filename(info['entries'][0]).replace('.webm', '.mp3').replace('.m4a', '.mp3')
@@ -174,17 +169,14 @@ def apply_metadata(file_path, song):
     except:
         audio = ID3()
 
-    # Limpiar metadatos existentes
     delete(file_path)
 
-    # Añadir nuevos metadatos
     audio.add(TIT2(encoding=3, text=song['title']))
     audio.add(TPE1(encoding=3, text=song['artists']))
     audio.add(TALB(encoding=3, text=song['album']))
     audio.add(TDRC(encoding=3, text=song['date']))
     audio.add(TCON(encoding=3, text=song['genre']))
 
-    # Añadir portada del álbum
     if song['image_url']:
         try:
             response = requests.get(song['image_url'], timeout=15)
@@ -219,7 +211,7 @@ def main(url_playlist, destination_dir):
                 continue
 
             download_song(destination_dir, song)
-            time.sleep(1.5)  # Reduce detection risk
+            time.sleep(1.5)
 
     except Exception as e:
         print(f"Fatal error: {str(e)}")
