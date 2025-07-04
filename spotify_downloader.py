@@ -151,7 +151,7 @@ def download_song(directory, song):
 
     try:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch:{song['title']} lyrics explicit {song['artists']} ", download=True)
+            info = ydl.extract_info(f"ytsearch:{song['title']} lyrics {song['artists']} ", download=True)
 
             if info and 'entries' in info and info['entries']:
                 temp_file = ydl.prepare_filename(info['entries'][0]).replace('.webm', '.mp3').replace('.m4a', '.mp3')
